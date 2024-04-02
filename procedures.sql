@@ -78,8 +78,9 @@ CREATE OR ALTER PROC SP_InserirModulo(
         Data..............: 27/03/2024
         Ex................: EXEC [dbo].[SP_InserirModulo]
         Retornos..........: 0 - Processamento OK
-                            1 - Id Dificuldade não existe
-                            2 - Id Curso não existe
+                            1 - Dificuldade não existe
+                            2 - Curso não existe
+                            3 - Erro ao inserir
         */
         BEGIN
             IF NOT EXISTS(SELECT Id FROM Dificuldade WHERE Id = @IdDificuldade ) RETURN 1
@@ -88,6 +89,8 @@ CREATE OR ALTER PROC SP_InserirModulo(
 
             INSERT INTO Modulo(IdDificuldade, IdCurso, Nome)
                 VALUES(@IdDificuldade, @IdCurso, @Nome)
+
+            IF @@ERROR != 0 RETURN 3        
 
             RETURN 0
 
@@ -106,8 +109,9 @@ CREATE OR ALTER PROC SP_InserirLicao(
         Autor.............: SMN - JUAN
         Data..............: 27/03/2024
         Ex................: EXEC [dbo].[SP_InserirModulo]
-        Retornos..........: 0 - Processamento OK
-                            1 - Id Dificuldade não existe
+        Retornos..........: 0 - Processamento 
+                            1 - Dificuldade não existe
+                            2 - Erro ao inserir
         */
          BEGIN
 
@@ -115,6 +119,8 @@ CREATE OR ALTER PROC SP_InserirLicao(
 
             INSERT INTO Licao(IdDificuldade, Nome)
                 VALUES(@IdDificuldade, @Nome)
+
+            IF @@ERROR != 0 RETURN 2
 
             RETURN 0
         END
