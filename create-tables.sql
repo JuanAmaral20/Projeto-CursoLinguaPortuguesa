@@ -112,7 +112,7 @@ CREATE TABLE TipoCurso(
 CREATE TABLE Turma(
 	Id INT PRIMARY KEY IDENTITY,
 	IdCurso TINYINT NOT NULL,
-	Quantidade SMALLINT NOT NULL,
+	Quantidade SMALLINT,
 	NumeroSala SMALLINT NOT NULL,
 	Presencial BIT NOT NULL,
 	FOREIGN KEY (IdCurso) REFERENCES Curso(Id)
@@ -183,8 +183,7 @@ CREATE TABLE Pagamento(
 	IdCurso TINYINT NOT NULL,
 	IdTipoPagamento SMALLINT NOT NULL,
 	IdCartao SMALLINT,
-	ValorTotal DECIMAL(15,2) NOT NULL,
-	Desconto SMALLINT NOT NULL
+	ValorTotal DECIMAL(15,2) NOT NULL
 	FOREIGN KEY (IdCurso) REFERENCES Curso(Id),
 	FOREIGN KEY (IdTipoPagamento) REFERENCES TipoPagamento(Id),
 	FOREIGN KEY (IdCartao) REFERENCES Cartao(Id)
@@ -200,4 +199,10 @@ CREATE TABLE Parcela(
 	FOREIGN KEY (IdPagamento) REFERENCES Pagamento(Id)
 	)
 
+CREATE TABLE UsuarioTurma (
+	IdUsuario INT NOT NULL,
+	FOREIGN KEY (IdUsuario) REFERENCES Usuario(Id),
+	IdTurma INT NOT NULL,
+	FOREIGN KEY (IdTurma) REFERENCES Turma(Id),
+)
 
