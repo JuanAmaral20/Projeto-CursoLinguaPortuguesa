@@ -78,8 +78,8 @@ CREATE OR ALTER PROC SP_InserirModulo(
         Data..............: 27/03/2024
         Ex................: EXEC [dbo].[SP_InserirModulo]
         Retornos..........: 0 - Processamento OK
-                            1 - Id Dificuldade não existe
-                            2 - Id Curso não existe
+                            1 - Dificuldade não existe
+                            2 - Curso não existe
                             3 - Erro ao inserir
         */
         BEGIN
