@@ -183,7 +183,8 @@ CREATE TABLE Pagamento(
 	IdCurso TINYINT NOT NULL,
 	IdTipoPagamento SMALLINT NOT NULL,
 	IdCartao SMALLINT,
-	ValorTotal DECIMAL(15,2) NOT NULL
+	ValorTotal DECIMAL(15,2) NOT NULL,
+	quantidadeparcelas INT,
 	FOREIGN KEY (IdCurso) REFERENCES Curso(Id),
 	FOREIGN KEY (IdTipoPagamento) REFERENCES TipoPagamento(Id),
 	FOREIGN KEY (IdCartao) REFERENCES Cartao(Id)
