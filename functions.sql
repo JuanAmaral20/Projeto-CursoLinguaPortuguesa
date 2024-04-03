@@ -43,7 +43,7 @@ CREATE OR ALTER FUNCTION [dbo].[validarAutenticacao] (
 	END
 GO
 
-CREATE FUNCTION CalcularValorTotal (
+CREATE OR ALTER FUNCTION CalcularValorTotal (
     @IdCurso TINYINT,
     @IdTipoPagamento SMALLINT,
     @ValorTotal DECIMAL(15,2),
@@ -55,19 +55,18 @@ BEGIN
     DECLARE @ValorComDesconto DECIMAL(15,2);
     DECLARE @ValorFinal DECIMAL(15,2);
 
-    IF @IdTipoPagamento = 1 
-        SET @ValorComDesconto = @ValorTotal * 0.95; 
-    ELSE IF @IdTipoPagamento = 2 
+    IF @IdTipoPagamento = 2
+        SET @ValorComDesconto = @ValorTotal - (@ValorTotal * 0.05); 
+
+      IF (@QtdParcelas > 1)
+        SET @ValorComDesconto += (@ValorComDesconto * 0.02 * @QtdParcelas)
+
+    ELSE IF @IdTipoPagamento = 1 
         SET @ValorComDesconto = @ValorTotal * 0.90; 
     ELSE
         SET @ValorComDesconto = @ValorTotal;
 
  
-    IF @QtdParcelas > 1
-        SET @ValorFinal = @ValorComDesconto * POWER(1.02, @QtdParcelas);
-    ELSE
-        SET @ValorFinal = @ValorComDesconto;
-
-    RETURN @ValorFinal;
+    RETURN @ValorComDesconto;
 END;
 
