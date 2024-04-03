@@ -1,4 +1,4 @@
--- 1
+
 CREATE OR ALTER PROC [dbo].[insertCursos]
 	@IdUsuario INT,
 	@IdTipoCurso INT,
@@ -34,7 +34,6 @@ CREATE OR ALTER PROC [dbo].[insertCursos]
 	END 
 GO
 
--- 2
 CREATE OR ALTER PROC [dbo].[selectTodosCursos]
 	@idUsuario INT
 	AS
@@ -63,7 +62,6 @@ CREATE OR ALTER PROC [dbo].[selectTodosCursos]
 	END 
 GO
 
--- 3
 CREATE OR ALTER PROC SP_InserirModulo(
 		@idProfessor INT,
         @IdDificuldade TINYINT,
@@ -132,7 +130,6 @@ CREATE OR ALTER PROC SP_InserirLicao(
     END
 GO
 
--- 4
 CREATE OR ALTER PROC [dbo].[insertDicionario]
 	@idProfessor INT,
 	@IdCurso INT,
@@ -199,7 +196,6 @@ CREATE OR ALTER PROC [dbo].[insertForum]
 	END 
 GO
 
--- 5
 CREATE OR ALTER PROC [dbo].[insertProgresso]
 	@idProfessor INT,
 	@IdModulo TINYINT,
@@ -273,7 +269,6 @@ CREATE OR ALTER PROC [dbo].[selectProgressos]
 	END
 GO
 
--- 6
 CREATE OR ALTER PROC [dbo].[insertAlunosEmTurmas]
 	@IdProfessor INT,
 	@idTurma INT,
@@ -375,6 +370,7 @@ CREATE OR ALTER PROC [dbo].[insertPagamento]
 	Retornos..........: 0 - Processamento OK
 						1 -	Curso não existe
 						2 - Tipo de pagamento não existe
+						3 - Numero de parcelas invalidas
 						3 - Erro ao inserir
 	*/
 	BEGIN
@@ -391,13 +387,122 @@ CREATE OR ALTER PROC [dbo].[insertPagamento]
 
 		IF NOT EXISTS (SELECT Id FROM TipoPagamento WHERE Id = @IdTipoPagamento) RETURN 2
 
+		IF @quantidadeParcelas IS NOT NULL AND @quantidadeParcelas > 5 RETURN 3
+
 		SET @valorComDesconto = (SELECT [dbo].[CalcularValorTotal](@IdCurso, @IdTipoPagamento, @ValorTotal, @quantidadeParcelas))
 
 		INSERT INTO Pagamento (IdCartao, IdCurso, IdTipoPagamento, quantidadeParcelas, ValorTotal)
 			VALUES (@IdCartao, @IdCurso, @IdTipoPagamento, @quantidadeParcelas, @valorComDesconto)
 
-		IF @@ERROR != 0 RETURN 3
+		IF @@ERROR != 0 RETURN 4
 
 		RETURN 0
 	END
+GO
+
+CREATE OR ALTER FUNCTION CalcularValorTotal (
+    @IdCurso TINYINT,
+    @IdTipoPagamento SMALLINT,
+    @ValorTotal DECIMAL(15,2),
+    @QtdParcelas SMALLINT
+)
+RETURNS DECIMAL(15,2)
+AS
+BEGIN
+    DECLARE @ValorComDesconto DECIMAL(15,2);
+    DECLARE @ValorFinal DECIMAL(15,2);
+
+    IF @IdTipoPagamento = 2
+        SET @ValorComDesconto = @ValorTotal - (@ValorTotal * 0.05); 
+
+		IF (@QtdParcelas > 1)
+			 SET @ValorComDesconto += (@ValorComDesconto * 0.02 * @QtdParcelas)
+
+    ELSE IF @IdTipoPagamento = 1 
+        SET @ValorComDesconto = @ValorTotal * 0.90; 
+    ELSE
+        SET @ValorComDesconto = @ValorTotal;
+
+ 
+    RETURN @ValorComDesconto;
+END;
+
+
+CREATE OR ALTER PROC [dbo].[insertCartao]
+	@idUsuario INT,
+	@Bandeira VARCHAR(45),
+	@Numero BIGINT,
+	@Validade VARCHAR(45),
+	@CVC SMALLINT
+
+	AS
+	/*
+	Documentação
+	Arquivo fonte.....: 
+	Objetivo..........: Inserir pagamento
+	Autor.............: SMN - JUAN
+	Data..............: 27/03/2024
+	Ex................: DECLARE @resultado INT
+						EXEC @resultado = [dbo].[insertCartao] 'te', 13, '02/2024', 123
+						SELECT @resultado
+	Retornos..........: 0 - Processamento OK
+						1 -	Curso não existe
+						2 - Tipo de pagamento não existe
+						3 - Numero de parcelas invalidas
+						3 - Erro ao inserir
+	*/
+	BEGIN
+		IF (SELECT [dbo].[validarAutenticacao](@IdUsuario)) != 2
+			BEGIN
+				SELECT 'Você não é aluno'
+				RETURN
+			END
+
+
+		IF (@Bandeira NOT LIKE 'MASTER CARD') AND (@Bandeira NOT LIKE 'VISA') RETURN 1
+
+		INSERT INTO Cartao (Numero, Validade, Bandeira, CVC)
+			VALUES (@Numero, @Validade, @Bandeira, @CVC)
+
+		IF @@ERROR != 0 RETURN 2
+
+		RETURN 0
+	END
+GO
+
+CREATE OR ALTER PROC SP_AtualizarParcela(
+	@IdUsuario INT,
+    @Id INT
+    )
+    AS
+	/*
+	Documentação
+	Arquivo fonte.....: 
+	Objetivo..........: Atualizar parcela
+	Autor.............: SMN - JUAN
+	Data..............: 27/03/2024
+	Ex................: DECLARE @resultado INT
+						EXEC @resultado = [dbo].[SP_AtualizarParcela] 1
+						SELECT @resultado
+	Retornos..........: 0 - Processamento OK
+						1 -	Parcela não existe
+						2 - Error ao atualizar
+	*/
+    BEGIN
+		IF (SELECT [dbo].[validarAutenticacao](@IdUsuario)) != 2
+			BEGIN
+				SELECT 'Você não é aluno'
+				RETURN
+			END
+
+        IF NOT EXISTS(SELECT Id FROM Parcela WHERE Id = @Id) RETURN 1
+
+        UPDATE Parcela
+            SET DataPagamentoRealizado = GETDATE()
+        WHERE Id = @Id
+
+		IF @@ERROR != 0 RETURN 2
+
+		RETURN 0
+    END
 GO
