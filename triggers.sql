@@ -95,3 +95,26 @@ CREATE OR ALTER TRIGGER TRG_InserirDataFinalCurso
                 WHERE Id = @IdI
         END
     GO
+
+		CREATE OR ALTER TRIGGER [dbo].[atualizarQuantidade]
+	    ON [dbo].[UsuarioTurma]
+        AFTER INSERT 
+        AS
+
+        BEGIN
+           -- VARIAVES
+		   DECLARE	@quantidade INT,
+					@idITurma INT
+
+			-- inserindom valores
+			SET @idITurma = (SELECT IdTurma FROM inserted)
+			SET @quantidade = (SELECT COUNT(IdUsuario) FROM UsuarioTurma WHERE IdTurma = @idITurma)
+
+			-- verificar se não tá nulo
+			IF (@idITurma IS NOT NULL)
+				UPDATE Turma
+					SET Quantidade = @quantidade
+
+		
+        END
+    GO
