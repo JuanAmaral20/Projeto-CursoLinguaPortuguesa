@@ -1,4 +1,3 @@
-
 CREATE OR ALTER PROC [dbo].[insertCursos]
 	@IdUsuario INT,
 	@IdTipoCurso INT,
@@ -333,7 +332,7 @@ CREATE OR ALTER PROC SP_InserirUsuarios(
 		Autor.............: SMN - JUAN
 		Data..............: 27/03/2024
 		Ex................: DECLARE @resultado INT
-							EXEC @resultado = [dbo].[SP_InserirUsuarios] 
+							EXEC @resultado = [dbo].[SP_InserirUsuarios]  'teste', 'ergrege', 12345678945, 'tss@teste.com', 123456798
 							SELECT @resultado
 		Retornos..........: 0 - Processamento OK
 							1 -	Turma não existe
@@ -342,6 +341,8 @@ CREATE OR ALTER PROC SP_InserirUsuarios(
 							4 - Erro ao inserir
 		*/
         BEGIN
+			IF @Email NOT LIKE '%@%.%' RETURN 1
+
             INSERT INTO Usuario(Nome, Sobrenome, CPF, Email, Senha, IdProfessor)
                 VALUES(@Nome, @Sobrenome, @CPF, @Email, HASHBYTES('MD2',@Senha), @IdProfessor)
 
@@ -505,4 +506,46 @@ CREATE OR ALTER PROC SP_AtualizarParcela(
 
 		RETURN 0
     END
+GO
+
+CREATE OR ALTER PROC listarForuns
+	@idCurso INT
+	AS
+	/*
+	Documentação
+	Arquivo fonte.....: 
+	Objetivo..........: Selecionar foruns
+	Autor.............: SMN - JUAN
+	Data..............: 27/03/2024
+	Ex................:	EXEC [dbo].[listarForuns] 'te', 13, '02/2024', 123
+	Retornos..........: 1 - Curso n existe
+
+	*/
+	BEGIN
+		IF NOT EXISTS (SELECT Id FROM Curso WHERE Id = @idCurso) RETURN 1
+
+		SELECT * FROM Forum
+			WHERE IdCurso = @idCurso
+	END
+GO
+
+
+CREATE OR ALTER PROC listarDicionarios
+	@idCurso INT
+	AS
+	/*
+	Documentação
+	Arquivo fonte.....: 
+	Objetivo..........: listart dicionarios
+	Autor.............: SMN - JUAN
+	Data..............: 27/03/2024
+	Ex................: EXEC  [dbo].[listarDicionarios]
+	Retornos..........: 1 - Curso n existe
+	*/
+	BEGIN
+		IF NOT EXISTS (SELECT Id FROM Curso WHERE Id = @idCurso) RETURN 1
+
+		SELECT * FROM Dicionario
+			WHERE IdCurso = @idCurso
+	END
 GO
