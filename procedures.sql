@@ -275,6 +275,7 @@ GO
 
 -- 6
 CREATE OR ALTER PROC [dbo].[insertAlunosEmTurmas]
+	@IdProfessor INT,
 	@idTurma INT,
 	@idUsuario INT
 	AS
@@ -297,6 +298,12 @@ CREATE OR ALTER PROC [dbo].[insertAlunosEmTurmas]
 	BEGIN
 		-- Variaveis
 		DECLARE @tipoTurma BIT
+
+		IF (SELECT [dbo].[validarAutenticacao](@IdProfessor)) != 1
+			BEGIN
+				SELECT 'Você não é professor'
+				RETURN
+			END
 
 		IF NOT EXISTS (SELECT Id FROM Turma WHERE Id = @idTurma) RETURN 1
 
@@ -348,6 +355,7 @@ CREATE OR ALTER PROC SP_InserirUsuarios(
     GO
 
 CREATE OR ALTER PROC [dbo].[insertPagamento] 
+	@IdUsuario INT,
 	@IdCurso TINYINT,
 	@IdTipoPagamento SMALLINT,
 	@ValorTotal DECIMAL(15,2),
@@ -362,7 +370,7 @@ CREATE OR ALTER PROC [dbo].[insertPagamento]
 	Autor.............: SMN - JUAN
 	Data..............: 27/03/2024
 	Ex................: DECLARE @resultado INT
-						EXEC @resultado = [dbo].[insertPagamento] 1, 1, 5000
+						EXEC @resultado = [dbo].[insertPagamento] 1, 1, 2, 5000, null, 4
 						SELECT @resultado
 	Retornos..........: 0 - Processamento OK
 						1 -	Curso não existe
@@ -370,12 +378,23 @@ CREATE OR ALTER PROC [dbo].[insertPagamento]
 						3 - Erro ao inserir
 	*/
 	BEGIN
+		-- Variaveis
+		DECLARE @valorComDesconto DECIMAL(15, 2)
+
+		IF (SELECT [dbo].[validarAutenticacao](@IdUsuario)) != 2
+			BEGIN
+				SELECT 'Você não é aluno'
+				RETURN
+			END
+
 		IF NOT EXISTS (SELECT Id FROM Curso WHERE Id = @IdCurso) RETURN 1
 
 		IF NOT EXISTS (SELECT Id FROM TipoPagamento WHERE Id = @IdTipoPagamento) RETURN 2
 
+		SET @valorComDesconto = (SELECT [dbo].[CalcularValorTotal](@IdCurso, @IdTipoPagamento, @ValorTotal, @quantidadeParcelas))
+
 		INSERT INTO Pagamento (IdCartao, IdCurso, IdTipoPagamento, quantidadeParcelas, ValorTotal)
-			VALUES (@IdCartao, @IdCurso, @IdTipoPagamento, @quantidadeParcelas, @ValorTotal)
+			VALUES (@IdCartao, @IdCurso, @IdTipoPagamento, @quantidadeParcelas, @valorComDesconto)
 
 		IF @@ERROR != 0 RETURN 3
 
