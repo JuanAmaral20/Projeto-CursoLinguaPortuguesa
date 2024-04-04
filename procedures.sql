@@ -1,3 +1,48 @@
+CREATE OR ALTER PROC inserirAutenticacao
+	@email VARCHAR(100),
+	@senha VARCHAR(20)
+	AS
+	/*
+	Documentação
+	Arquivo fonte.....: 
+	Objetivo..........: Atualizar parcela
+	Autor.............: SMN - JUAN
+	Data..............: 27/03/2024
+	Ex................: EXEC [dbo].[inserirAutenticacao] 'tss@teste.com', '123456798'	
+	SELECT * FROM Autenticacao
+
+		
+	*/
+	BEGIN
+		-- Varivaveis
+		DECLARE @idUsuario INT
+
+		-- INSERINDO VARIAVEIS
+		SET @idUsuario = (SELECT Id FROM Usuario WHERE Email = @email AND Senha = HASHBYTES('MD2',@senha))
+
+		IF (@idUsuario IS NULL)
+			BEGIN
+				SELECT 'Usuário n existe'
+				RETURN
+			END
+
+		IF NOT EXISTS (SELECT TOP 1 Id FROM Autenticacao WHERE IdUsuario = @idUsuario)
+			INSERT INTO Autenticacao (IdUsuario, HorarioInicial)
+				VALUES (@idUsuario, CURRENT_TIMESTAMP)
+		ELSE 
+			UPDATE Autenticacao
+				SET HorarioInicial = CURRENT_TIMESTAMP
+				WHERE IdUsuario = @idUsuario
+
+		IF @@ERROR != 0
+			BEGIN
+				SELECT 'Erro ao inserir'
+				RETURN
+			END
+
+		SELECT 'Sucesso'
+	END
+GO
 CREATE OR ALTER PROC [dbo].[insertCursos]
 	@IdUsuario INT,
 	@IdProfessor INT,
