@@ -145,7 +145,60 @@ CREATE OR ALTER TRIGGER [dbo].[atualizarQuantidade]
         IF (@idITurma IS NOT NULL)
             UPDATE Turma
                 SET Quantidade = @quantidade
-                WHERE IdTurma = @idITurma
+                WHERE Id = @idITurma
 
     END
+GO
+
+CREATE OR ALTER TRIGGER TRG_ContadorDeParcelasPagas
+	ON [dbo].[Parcela]
+	AFTER UPDATE
+	AS
+    /*
+    Documentação
+    Arquivo fonte.....: 
+    Objetivo..........:	Contar parcelas pagas
+    Autor.............: SMN - Emanuel
+    Data..............: 28/03/2024
+    */
+	BEGIN
+		-- Variaveis
+		DECLARE @idI INT,
+				@IdUsuarioIdI INT
+
+		-- inserindo variaveis
+		SELECT @idI = i.Id, @IdUsuarioIdI = P.UsuarioId FROM inserted AS i
+			INNER JOIN Pagamento AS P
+				ON i.IdPagamento = P.Id
+
+		IF (@idI IS NOT NULL) AND (NOT EXISTS (SELECT * FROM ControlePagamento WHERE IdUsuario = @IdUsuarioIdI))
+			INSERT INTO ControlePagamento (IdUsuario, QtdParcelas, TotalParcelas)
+				VALUES (@IdUsuarioIdI, 1, 0)
+		ELSE 
+			UPDATE ControlePagamento
+				SET QtdParcelas += 1
+				WHERE IdUsuario = @IdUsuarioIdI
+
+	END
+GO
+
+CREATE TRIGGER TRG_atualizarHoraFinalAutenticacao
+	ON Autenticacao
+	AFTER INSERT, UPDATE
+	AS
+	BEGIN
+		-- variaveis
+		DECLARE @IdI INT,
+				@horaInicial TIME
+
+		-- Inserindo valores
+		SET @IdI = (SELECT Id FROM inserted)
+		SET @horaInicial = (SELECT HorarioInicial FROM inserted)
+
+		IF @IdI IS NOT NULL
+			UPDATE Autenticacao
+				SET HorarioFinal = DATEADD(HOUR, 6, HorarioInicial)
+				WHERE Id = @IdI
+
+	END
 GO
