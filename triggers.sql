@@ -197,7 +197,7 @@ CREATE TRIGGER TRG_atualizarHoraFinalAutenticacao
 
 		IF @IdI IS NOT NULL
 			UPDATE Autenticacao
-				SET HorarioFinal = DATEADD(HOUR, 6, HorarioInicial)
+				SET HorarioFinal = DATEADD(HOUR, 6, @HorarioInicial)
 				WHERE Id = @IdI
 
 	END
