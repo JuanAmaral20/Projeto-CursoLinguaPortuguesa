@@ -181,3 +181,24 @@ CREATE OR ALTER TRIGGER TRG_ContadorDeParcelasPagas
 
 	END
 GO
+
+CREATE TRIGGER TRG_atualizarHoraFinalAutenticacao
+	ON Autenticacao
+	AFTER INSERT, UPDATE
+	AS
+	BEGIN
+		-- variaveis
+		DECLARE @IdI INT,
+				@horaInicial TIME
+
+		-- Inserindo valores
+		SET @IdI = (SELECT Id FROM inserted)
+		SET @horaInicial = (SELECT HorarioInicial FROM inserted)
+
+		IF @IdI IS NOT NULL
+			UPDATE Autenticacao
+				SET HorarioFinal = DATEADD(HOUR, 6, HorarioInicial)
+				WHERE Id = @IdI
+
+	END
+GO
