@@ -29,7 +29,7 @@ CREATE OR ALTER FUNCTION [dbo].[validarAutenticacao] (
 				@idAutenticado = Id
 				FROM Autenticacao WHERE IdUsuario = @idUsuario
 
-		SET @horasAutenticadas = (SELECT DATEDIFF(HOUR, '15:00:00', '21:00:00'))
+		SET @horasAutenticadas = (SELECT DATEDIFF(HOUR, @horarioFinal, @horarioInicial))
 
 		
 		SET @idProfessor = (SELECT IdProfessor FROM Usuario WHERE Id = @idUsuario)
